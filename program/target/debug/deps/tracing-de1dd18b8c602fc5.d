@@ -1,0 +1,13 @@
+/home/madking/Documents/rust-react-builds/solfund/program/target/debug/deps/tracing-de1dd18b8c602fc5.rmeta: /home/madking/.cargo/registry/src/github.com-1ecc6299db9ec823/tracing-0.1.32/src/lib.rs /home/madking/.cargo/registry/src/github.com-1ecc6299db9ec823/tracing-0.1.32/src/macros.rs /home/madking/.cargo/registry/src/github.com-1ecc6299db9ec823/tracing-0.1.32/src/dispatcher.rs /home/madking/.cargo/registry/src/github.com-1ecc6299db9ec823/tracing-0.1.32/src/field.rs /home/madking/.cargo/registry/src/github.com-1ecc6299db9ec823/tracing-0.1.32/src/instrument.rs /home/madking/.cargo/registry/src/github.com-1ecc6299db9ec823/tracing-0.1.32/src/level_filters.rs /home/madking/.cargo/registry/src/github.com-1ecc6299db9ec823/tracing-0.1.32/src/span.rs /home/madking/.cargo/registry/src/github.com-1ecc6299db9ec823/tracing-0.1.32/src/stdlib.rs /home/madking/.cargo/registry/src/github.com-1ecc6299db9ec823/tracing-0.1.32/src/subscriber.rs
+
+/home/madking/Documents/rust-react-builds/solfund/program/target/debug/deps/tracing-de1dd18b8c602fc5.d: /home/madking/.cargo/registry/src/github.com-1ecc6299db9ec823/tracing-0.1.32/src/lib.rs /home/madking/.cargo/registry/src/github.com-1ecc6299db9ec823/tracing-0.1.32/src/macros.rs /home/madking/.cargo/registry/src/github.com-1ecc6299db9ec823/tracing-0.1.32/src/dispatcher.rs /home/madking/.cargo/registry/src/github.com-1ecc6299db9ec823/tracing-0.1.32/src/field.rs /home/madking/.cargo/registry/src/github.com-1ecc6299db9ec823/tracing-0.1.32/src/instrument.rs /home/madking/.cargo/registry/src/github.com-1ecc6299db9ec823/tracing-0.1.32/src/level_filters.rs /home/madking/.cargo/registry/src/github.com-1ecc6299db9ec823/tracing-0.1.32/src/span.rs /home/madking/.cargo/registry/src/github.com-1ecc6299db9ec823/tracing-0.1.32/src/stdlib.rs /home/madking/.cargo/registry/src/github.com-1ecc6299db9ec823/tracing-0.1.32/src/subscriber.rs
+
+/home/madking/.cargo/registry/src/github.com-1ecc6299db9ec823/tracing-0.1.32/src/lib.rs:
+/home/madking/.cargo/registry/src/github.com-1ecc6299db9ec823/tracing-0.1.32/src/macros.rs:
+/home/madking/.cargo/registry/src/github.com-1ecc6299db9ec823/tracing-0.1.32/src/dispatcher.rs:
+/home/madking/.cargo/registry/src/github.com-1ecc6299db9ec823/tracing-0.1.32/src/field.rs:
+/home/madking/.cargo/registry/src/github.com-1ecc6299db9ec823/tracing-0.1.32/src/instrument.rs:
+/home/madking/.cargo/registry/src/github.com-1ecc6299db9ec823/tracing-0.1.32/src/level_filters.rs:
+/home/madking/.cargo/registry/src/github.com-1ecc6299db9ec823/tracing-0.1.32/src/span.rs:
+/home/madking/.cargo/registry/src/github.com-1ecc6299db9ec823/tracing-0.1.32/src/stdlib.rs:
+/home/madking/.cargo/registry/src/github.com-1ecc6299db9ec823/tracing-0.1.32/src/subscriber.rs:
