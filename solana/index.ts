@@ -1,16 +1,31 @@
-import { WalletNotConnectedError } from '@solana/wallet-adapter-base'
-import { useConnection, useWallet } from '@solana/wallet-adapter-react'
+import { PhantomWalletAdapter } from '@solana/wallet-adapter-wallets'
+import {
+  WalletAdapterNetwork,
+  WalletNotConnectedError,
+} from '@solana/wallet-adapter-base'
+import Wallet from '@project-serum/sol-wallet-adapter'
+
 import {
   Keypair,
   PublicKey,
   SystemProgram,
   Transaction,
   TransactionInstruction,
+  Connection,
+  clusterApiUrl,
 } from '@solana/web3.js'
 import { deserialize, serialize } from 'borsh'
-const { connection } = useConnection()
-const { wallet, publicKey, sendTransaction, signTransaction } = useWallet()
-const programId = new PublicKey(process.env.PROGRAM_ID!)
+
+const programId = new PublicKey('HEU8dhHz4oegHFSa2RJtg7WFFGwJX4rTXDB9ihgecZY9')
+
+const network = WalletAdapterNetwork.Devnet
+
+const cluster = clusterApiUrl(network)
+
+
+const wallet = new Wallet('https://www.sollet.io', cluster)
+
+const connection = new Connection(cluster, 'confirmed')
 
 // returns a transaction
 export const setPayerAndBlockhashTransaction = async (
@@ -21,9 +36,9 @@ export const setPayerAndBlockhashTransaction = async (
     transaction.add(element)
   })
 
-  if (!publicKey) throw new WalletNotConnectedError()
+  if (!wallet.publicKey) throw new WalletNotConnectedError()
   //getting the publickey from the wallet and setting the tx fee payer
-  transaction.feePayer = publicKey!
+  transaction.feePayer = wallet.publicKey!
 
   //setting the recent/latest blockhash
   let hash = await connection.getLatestBlockhash()
@@ -36,19 +51,18 @@ export const signAndSendTransaction = async (transaction: Transaction) => {
   try {
     console.log('Start Signing and Sending the TX.')
 
-    // @ts-ignore
-    //! Temporary fix - signTransaction is acceptiong transaction variable
-    let signedTransaction = await signTransaction(transaction)
+    let signedTransaction = await wallet.signTransaction(transaction)
     console.log('Tx signed.')
 
+    console.log(signedTransaction)
     let signature = await connection.sendRawTransaction(
       signedTransaction.serialize()
     )
 
+    console.log(signature)
     return signature
   } catch (err) {
-    console.error(err)
-    throw err
+    console.log(err)
   }
 }
 
@@ -90,75 +104,12 @@ class CampaignDetails {
   ])
 }
 
-const checkWallet = async () => {
-  if (!wallet?.adapter.connected) {
-    await wallet?.adapter.connect()
+export const checkWallet = async () => {
+  if (!wallet.connected) {
+    await wallet.connect()
   }
 }
 
-export const createCampaign = async (
-  name: string,
-  description: string,
-  image_link: string
-) => {
-  await checkWallet()
-
-  const SEED_PRHASE = 'abcdef' + Math.random().toString()
-
-  //creating an account to contain the data of the campaign
-  let newAccount = await PublicKey.createWithSeed(
-    publicKey!,
-    SEED_PRHASE,
-    programId
-  )
-
-  //setup campaign details
-  let campaign = new CampaignDetails(
-    name,
-    description,
-    image_link,
-    publicKey?.toBuffer()!,
-    0
-  )
-
-  let data = serialize(CampaignDetails.schema, campaign)
-
-  let data_to_send = new Uint8Array([0.0, ...data])
-
-  const lamports = await connection.getMinimumBalanceForRentExemption(
-    data.length
-  )
-
-  const createProgramAccount = SystemProgram.createAccountWithSeed({
-    fromPubkey: publicKey!,
-    basePubkey: publicKey!,
-    seed: SEED_PRHASE,
-    newAccountPubkey: newAccount,
-    lamports: lamports,
-    space: data.length,
-    programId: programId,
-  })
-
-  const instructionToOurProgram = new TransactionInstruction({
-    keys: [
-      { pubkey: newAccount, isSigner: false, isWritable: true },
-      { pubkey: publicKey!, isSigner: true, isWritable: true },
-    ],
-    programId: programId,
-    data: data_to_send as Buffer,
-  })
-
-  const trans = await setPayerAndBlockhashTransaction([
-    createProgramAccount,
-    instructionToOurProgram,
-  ])
-
-  const signature = await signAndSendTransaction(trans)
-
-  const result = await connection.confirmTransaction(signature)
-
-  console.log('End SendMessage', result)
-}
 
 export const getAllCampaigns = async () => {
   let accounts = await connection.getProgramAccounts(programId)
@@ -202,14 +153,14 @@ export const donateToCampaign = async (campaignPubKey: any, amount: any) => {
 
   //creating an account to contain the data of the campaign
   let newAccount = await PublicKey.createWithSeed(
-    publicKey!,
+    wallet.publicKey!,
     SEED_PRHASE,
     programId
   )
 
   const createProgramAccount = SystemProgram.createAccountWithSeed({
-    fromPubkey: publicKey!,
-    basePubkey: publicKey!,
+    fromPubkey: wallet.publicKey!,
+    basePubkey: wallet.publicKey!,
     seed: SEED_PRHASE,
     newAccountPubkey: newAccount,
     lamports: amount,
@@ -220,7 +171,7 @@ export const donateToCampaign = async (campaignPubKey: any, amount: any) => {
   const instructionToOurProgram = new TransactionInstruction({
     keys: [
       { pubkey: newAccount, isSigner: false, isWritable: true },
-      { pubkey: publicKey!, isSigner: true, isWritable: true },
+      { pubkey: wallet.publicKey!, isSigner: true, isWritable: true },
       { pubkey: campaignPubKey, isSigner: false, isWritable: true },
     ],
     programId: programId,
@@ -249,7 +200,7 @@ export const withdraw = async (campaignPubKey: any, amount: number) => {
   const instructionToOurProgram = new TransactionInstruction({
     keys: [
       { pubkey: campaignPubKey, isSigner: false, isWritable: true },
-      { pubkey: publicKey!, isSigner: true, isWritable: true },
+      { pubkey: wallet.publicKey!, isSigner: true, isWritable: true },
     ],
     programId: programId,
     data: data_to_send as Buffer,
@@ -259,7 +210,7 @@ export const withdraw = async (campaignPubKey: any, amount: number) => {
 
   const signature = await signAndSendTransaction(trans)
 
-  const result = await connection.confirmTransaction(signature)
+  const result = await connection.confirmTransaction(signature!)
 
   console.log('end sendMessage', result)
 }
