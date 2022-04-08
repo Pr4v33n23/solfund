@@ -7,7 +7,7 @@ import {
   TransactionInstruction,
 } from '@solana/web3.js'
 import { serialize } from 'borsh'
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { SubmitHandler, useForm } from 'react-hook-form'
 import { Header } from '../../components/header/Header'
 
@@ -75,7 +75,12 @@ const Index: React.FC = () => {
     'HEU8dhHz4oegHFSa2RJtg7WFFGwJX4rTXDB9ihgecZY9'
   )
 
-  const { register, handleSubmit } = useForm<IFormInput>()
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { isSubmitSuccessful },
+  } = useForm<IFormInput>()
 
   const setPayerAndBlockhashTransaction = async (
     instructions: Array<TransactionInstruction>
@@ -119,7 +124,6 @@ const Index: React.FC = () => {
     image_link: string
   ) => {
     const SEED_PRHASE = 'abcdef' + Math.random().toString()
-
     //creating an account to contain the data of the campaign
     let newAccount = await PublicKey.createWithSeed(
       publicKey!,
@@ -182,6 +186,7 @@ const Index: React.FC = () => {
   }) => {
     try {
       await createCampaign(title, description, image_link)
+      reset({ title: '', description: '', image_link: '' })
     } catch (err) {
       console.error(err)
     }
@@ -238,6 +243,9 @@ const Index: React.FC = () => {
           <input
             type="submit"
             disabled={true}
+            onClick={() => {
+              reset()
+            }}
             className="focus:shadow-outline rounder cursor-pointer bg-purple-500 py-2 px-4 font-bold 
         text-white shadow hover:bg-purple-400 focus:outline-none disabled:opacity-25"
           />
