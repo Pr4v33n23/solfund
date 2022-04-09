@@ -18,20 +18,20 @@ interface IFormInput {
 }
 
 class CampaignDetails {
-  name: string
+  title: string
   description: string
   image_link: string
   admin: Buffer
   amount_donated: number
 
   constructor(
-    name: string,
+    title: string,
     description: string,
     image_link: string,
     admin: Buffer,
     amount_donated: number
   ) {
-    ;(this.name = name),
+    ;(this.title = title),
       (this.description = description),
       (this.image_link = image_link),
       (this.admin = admin),
@@ -45,7 +45,7 @@ class CampaignDetails {
         kind: 'struct',
         fields: [
           ['admin', [32]],
-          ['name', 'string'],
+          ['title', 'string'],
           ['description', 'string'],
           ['image_link', 'string'],
           ['amount_donated', 'u64'],
@@ -71,8 +71,9 @@ const Index: React.FC = () => {
     connectWallet()
   })
 
+  //TODO env variable not working
   const programId = new PublicKey(
-    'HEU8dhHz4oegHFSa2RJtg7WFFGwJX4rTXDB9ihgecZY9'
+    '2y6yyVPyRDcKiz9wSRpnEAFUQHusWMbvatAFeSREhvzM'
   )
 
   const {
@@ -119,7 +120,7 @@ const Index: React.FC = () => {
   }
 
   const createCampaign = async (
-    name: string,
+    title: string,
     description: string,
     image_link: string
   ) => {
@@ -130,17 +131,21 @@ const Index: React.FC = () => {
       SEED_PRHASE,
       programId
     )
+    console.log(title, description, image_link)
 
     //setup campaign details
     let campaign = new CampaignDetails(
-      name,
+      title,
       description,
       image_link,
       publicKey?.toBuffer()!,
       0
     )
+    console.log(campaign)
 
     let data = serialize(CampaignDetails.schema, campaign)
+
+    console.log(data)
 
     let data_to_send = new Uint8Array([0.0, ...data])
 
@@ -209,7 +214,7 @@ const Index: React.FC = () => {
           <input
             {...register('title', { required: false })}
             className="form-input mt-1 block w-full rounded border py-2 px-3 shadow outline-none ring-purple-500 focus:ring-2"
-            placeholder="John Appleseed"
+            placeholder="Dogs"
             type="text"
           />
         </label>
@@ -219,7 +224,7 @@ const Index: React.FC = () => {
           <input
             {...register('description', { required: false })}
             className="form-input mt-1 block w-full rounded border py-2 px-3 shadow outline-none ring-purple-500 focus:ring-2"
-            placeholder="John Appleseed"
+            placeholder="Save dogs"
             type="text"
           />
         </label>
@@ -229,7 +234,7 @@ const Index: React.FC = () => {
           <input
             {...register('image_link', { required: false })}
             className="form-input mt-1 block w-full rounded border py-2 px-3 shadow outline-none ring-purple-500 focus:ring-2"
-            placeholder="John Appleseed"
+            placeholder="https://i.natgeofe.com/n/4f5aaece-3300-41a4-b2a8-ed2708a0a27c/domestic-dog_thumb_2x1.jpg"
             type="text"
           />
         </label>

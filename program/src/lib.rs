@@ -4,6 +4,7 @@ use solana_program::{
     account_info::{next_account_info, AccountInfo},
     entrypoint,
     entrypoint::ProgramResult,
+    log::{sol_log_compute_units, sol_log_params, sol_log_slice},
     msg,
     program_error::ProgramError,
     pubkey::Pubkey,
@@ -100,8 +101,8 @@ fn create_campaign(
         return Err(ProgramError::IncorrectProgramId);
     }
 
-    let mut campaign_data = CampaignDetails::try_from_slice(&instruction_data)
-        .expect("Error deserializing");
+    let mut campaign_data =
+        CampaignDetails::try_from_slice(&instruction_data).expect("Error deserializing");
 
     //A Campaign should be created only by the admin of this program.
     if campaign_data.admin != *campaign_creator_account.key {
@@ -116,11 +117,23 @@ fn create_campaign(
         msg!("The balance of program_owner_account shoould be more than rent_exemption");
         return Err(ProgramError::InsufficientFunds);
     }
-
     campaign_data.amount_donated = 0;
 
     //Serializing the campaign data
     campaign_data.serialize(&mut &mut program_owner_account.try_borrow_mut_data()?[..])?;
+
+    // Log a slice
+    sol_log_slice(instruction_data);
+
+    // Log a formatted message, use with caution can be expensive
+    msg!("formatted {}: {:?}", "message", instruction_data);
+    msg!("formatted {}: {:?}", "message", campaign_data);
+
+    // Log a public key
+    program_id.log();
+
+    // Log all the program's input parameters
+    sol_log_params(accounts, instruction_data);
 
     Ok(())
 }
@@ -175,7 +188,6 @@ fn withdraw(
     Ok(())
 }
 fn donate(program_id: &Pubkey, accounts: &[AccountInfo], instruction_data: &[u8]) -> ProgramResult {
-
     let accounts_iter = &mut accounts.iter();
     let program_owner_account = next_account_info(accounts_iter)?;
     let donator_program_account = next_account_info(accounts_iter)?;
@@ -194,13 +206,13 @@ fn donate(program_id: &Pubkey, accounts: &[AccountInfo], instruction_data: &[u8]
         return Err(ProgramError::IncorrectProgramId);
     }
 
-
     let mut campaign_data = CampaignDetails::try_from_slice(*program_owner_account.data.borrow())
-    .expect("Error deserializing");
+        .expect("Error deserializing");
 
     campaign_data.amount_donated += **donator_program_account.lamports.borrow();
 
-    **program_owner_account.try_borrow_mut_lamports()? += **donator_program_account.lamports.borrow();
+    **program_owner_account.try_borrow_mut_lamports()? +=
+        **donator_program_account.lamports.borrow();
     **donator_program_account.try_borrow_mut_lamports()? = 0;
 
     campaign_data.serialize(&mut &mut program_owner_account.try_borrow_mut_data()?[..])?;
