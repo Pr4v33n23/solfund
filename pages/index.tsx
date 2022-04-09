@@ -6,7 +6,7 @@ import {
   Transaction,
   TransactionInstruction,
 } from '@solana/web3.js'
-import { deserialize } from 'borsh'
+import { deserialize, serialize } from 'borsh'
 import type { NextPage } from 'next'
 import Head from 'next/head'
 import React, { useEffect, useState } from 'react'
@@ -52,6 +52,18 @@ class CampaignDetails {
         ],
       },
     ],
+  ])
+}
+
+class WithDrawRequest {
+  amount: number
+
+  constructor(amount: number) {
+    this.amount = amount
+  }
+
+  static schema = new Map([
+    [WithDrawRequest, { kind: 'struct', fields: [['amount', 'u64']] }],
   ])
 }
 
@@ -205,6 +217,31 @@ const Home: NextPage = () => {
     console.log('end sendMessage', result)
   }
 
+  const withdraw = async (campaignPubKey: any, amount: number) => {
+    let withdrawRequest = new WithDrawRequest(amount)
+    let data = serialize(WithDrawRequest.schema, withdrawRequest)
+    let data_to_send = new Uint8Array([1, ...data])
+
+    const instructionToOurProgram = new TransactionInstruction({
+      keys: [
+        { pubkey: campaignPubKey, isSigner: false, isWritable: true },
+        { pubkey: publicKey!, isSigner: true, isWritable: true },
+      ],
+      programId: programId,
+      data: Buffer.from(data_to_send),
+    })
+
+    const trans = await setPayerAndBlockhashTransaction([
+      instructionToOurProgram,
+    ])
+
+    const signature = await signAndSendTransaction(trans)
+
+    const result = await connection.confirmTransaction(signature!)
+
+    console.log('end sendMessage', result)
+  }
+
   const onDonate = async (
     e: React.MouseEvent<HTMLButtonElement, MouseEvent>,
     pubKey: PublicKey
@@ -212,12 +249,29 @@ const Home: NextPage = () => {
     e.preventDefault()
     console.log(pubKey)
     const totalSol = amount * LAMPORTS
-    await donateToCampaign(pubKey, totalSol)
-    let updatedCampaigns = await getAllCampaigns()
-    updatedCampaigns.map((campaign: any) => {
-      console.log(campaign.amount_donated.toString())
-    })
-    setAllCampaigns(updatedCampaigns)
+
+    try {
+      await donateToCampaign(pubKey, totalSol)
+      let updatedCampaigns = await getAllCampaigns()
+      setAllCampaigns(updatedCampaigns)
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  const onWithdraw = async (
+    e: React.MouseEvent<HTMLButtonElement, MouseEvent>,
+    pubKey: PublicKey
+  ) => {
+    e.preventDefault()
+    try {
+      const totalSol = amount * LAMPORTS
+      await withdraw(pubKey, totalSol)
+      let updatedCampaigns = await getAllCampaigns()
+      setAllCampaigns(updatedCampaigns)
+    } catch (err) {
+      console.log(err)
+    }
   }
 
   return (
@@ -253,7 +307,7 @@ const Home: NextPage = () => {
                   </span>
                 </p>
               </div>
-              <div className="m-2 flex space-x-2 items-center justify-between sm:space-x-2">
+              <div className="m-2 flex items-center justify-between space-x-2 sm:space-x-2">
                 <input
                   className="w-4/6 rounded-md border p-2 text-xs shadow outline-none ring-violet-600 focus:ring-2 "
                   placeholder="Amount to donate"
@@ -268,7 +322,7 @@ const Home: NextPage = () => {
                   Donate
                 </button>
               </div>
-              <div className="m-2 space-x-2 flex items-center justify-between sm:space-x-4">
+              <div className="m-2 flex items-center justify-between space-x-2 sm:space-x-4">
                 <input
                   className="w-4/6 rounded-md border p-2 text-xs shadow outline-none ring-violet-600 focus:ring-2 "
                   placeholder="Amount to withdraw"
@@ -278,7 +332,7 @@ const Home: NextPage = () => {
                 <button
                   className="rounded bg-violet-700 px-4 py-2  text-xs font-bold text-white shadow outline-none hover:bg-violet-800 focus:outline-none focus:ring focus:ring-violet-600 active:bg-violet-900 sm:px-2 sm:py-2"
                   type="submit"
-                  onClick={(e) => onDonate(e, campaign.pubId)}
+                  onClick={(e) => onWithdraw(e, campaign.pubId)}
                 >
                   Withdraw
                 </button>
