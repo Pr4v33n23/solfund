@@ -23,8 +23,8 @@ export const Header = () => {
 
       <div className="flex flex-shrink-0 items-center justify-between space-x-5 md:inline-flex">
         <Link href="/campaign">
-          <button className="border border-sky-400 py-2 px-3 font-semibold text-white hover:text-teal-200">
-            <span>Create Campaign</span>
+          <button className="border border-sky-400 px-4 py-2  font-semibold text-white hover:text-teal-200 md:p-2 ">
+            <span className="text-sm md:text-base">New Campaign</span>
           </button>
         </Link>
         <WalletMultiButton />

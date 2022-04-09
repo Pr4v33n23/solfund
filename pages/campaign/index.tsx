@@ -73,7 +73,7 @@ const Index: React.FC = () => {
 
   //TODO env variable not working
   const programId = new PublicKey(
-    '2y6yyVPyRDcKiz9wSRpnEAFUQHusWMbvatAFeSREhvzM'
+    'HpUfRuwq697hGMvno28BZaAGBD6LVqS9Y3cP2dCsVZmz'
   )
 
   const {
@@ -106,13 +106,13 @@ const Index: React.FC = () => {
     try {
       console.log('Start Signing and Sending the TX.')
 
-      // @ts-ignore
-      let signedTransaction = await signTransaction(transaction)
+      let signedTransaction = await signTransaction!(transaction)
       console.log('Tx signed.')
 
       let signature = await connection.sendRawTransaction(
         signedTransaction.serialize()
       )
+
       return signature
     } catch (err) {
       console.log(err)
@@ -169,7 +169,7 @@ const Index: React.FC = () => {
         { pubkey: publicKey!, isSigner: true, isWritable: true },
       ],
       programId: programId,
-      data: data_to_send as Buffer,
+      data: Buffer.from(data_to_send),
     })
 
     const trans = await setPayerAndBlockhashTransaction([
@@ -202,9 +202,9 @@ const Index: React.FC = () => {
       <Header />
       <form
         onSubmit={handleSubmit(onSubmit)}
-        className="my-10 mx-auto mb-10 flex max-w-2xl flex-col "
+        className="my-10 mx-2 mb-10 flex max-w-2xl flex-col sm:mx-auto"
       >
-        <h1 className="flex justify-center text-xl font-bold text-purple-500 md:text-2xl ">
+        <h1 className="flex justify-center text-xl font-bold text-purple-500 sm:text-sm md:text-2xl">
           Create a new campaign
         </h1>
         <hr className="mt-2 py-3" />
@@ -213,7 +213,7 @@ const Index: React.FC = () => {
           <span className="text-white">Title</span>
           <input
             {...register('title', { required: false })}
-            className="form-input mt-1 block w-full rounded border py-2 px-3 shadow outline-none ring-purple-500 focus:ring-2"
+            className="form-input mt-1 block w-full rounded border py-1 px-2 sm:py-2 sm:px-3 shadow outline-none ring-purple-500 focus:ring-2"
             placeholder="Dogs"
             type="text"
           />
@@ -223,7 +223,7 @@ const Index: React.FC = () => {
           <span className="text-white">Description</span>
           <input
             {...register('description', { required: false })}
-            className="form-input mt-1 block w-full rounded border py-2 px-3 shadow outline-none ring-purple-500 focus:ring-2"
+            className="form-input mt-1 block w-full rounded border py-1 px-2 sm:py-2 sm:px-3 shadow outline-none ring-purple-500 focus:ring-2"
             placeholder="Save dogs"
             type="text"
           />
@@ -233,7 +233,7 @@ const Index: React.FC = () => {
           <span className="text-white">Image Link</span>
           <input
             {...register('image_link', { required: false })}
-            className="form-input mt-1 block w-full rounded border py-2 px-3 shadow outline-none ring-purple-500 focus:ring-2"
+            className="form-input mt-1 block w-full rounded border py-1 px-2 sm:py-2 sm:px-3 shadow outline-none ring-purple-500 focus:ring-2"
             placeholder="https://i.natgeofe.com/n/4f5aaece-3300-41a4-b2a8-ed2708a0a27c/domestic-dog_thumb_2x1.jpg"
             type="text"
           />
@@ -241,7 +241,7 @@ const Index: React.FC = () => {
         {walletConnected ? (
           <input
             type="submit"
-            className="focus:shadow-outline rounder cursor-pointer bg-purple-500 py-2 px-4 font-bold 
+            className="focus:shadow-outline rounder cursor-pointer bg-purple-500  py-1 px-2 sm:py-2 sm:px-4 font-bold 
           text-white shadow hover:bg-purple-400 focus:outline-none "
           />
         ) : (

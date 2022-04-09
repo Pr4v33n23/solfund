@@ -1,7 +1,9 @@
+import { WalletNotConnectedError } from '@solana/wallet-adapter-base'
 import { useConnection, useWallet } from '@solana/wallet-adapter-react'
 import {
   PublicKey,
   SystemProgram,
+  Transaction,
   TransactionInstruction,
 } from '@solana/web3.js'
 import { deserialize } from 'borsh'
@@ -65,6 +67,7 @@ interface ICampaignData {
 const Home: NextPage = () => {
   const { connection } = useConnection()
   const { publicKey, signTransaction, connected } = useWallet()
+  const LAMPORTS = 1000000000 // 1 lamport = 0.000000001 sol.
 
   const [allCampaigns, setAllCampaigns] = useState([] as any)
   const [amount, setAmount] = useState(0)
@@ -81,8 +84,45 @@ const Home: NextPage = () => {
 
   //TODO env variable not working
   const programId = new PublicKey(
-    '2y6yyVPyRDcKiz9wSRpnEAFUQHusWMbvatAFeSREhvzM'
+    'HpUfRuwq697hGMvno28BZaAGBD6LVqS9Y3cP2dCsVZmz'
   )
+
+  const setPayerAndBlockhashTransaction = async (
+    instructions: Array<TransactionInstruction>
+  ) => {
+    const transaction = new Transaction()
+    instructions.forEach((element) => {
+      transaction.add(element)
+    })
+
+    if (!publicKey) throw new WalletNotConnectedError()
+    //getting the publickey from the wallet and setting the tx fee payer
+    transaction.feePayer = publicKey!
+
+    //setting the recent/latest blockhash
+    let hash = await connection.getLatestBlockhash()
+    transaction.recentBlockhash = hash.blockhash
+    return transaction
+  }
+
+  //returns the signature
+  const signAndSendTransaction = async (transaction: Transaction) => {
+    try {
+      console.log('Start Signing and Sending the TX.')
+
+      let signedTransaction = await signTransaction!(transaction)
+      console.log('Tx signed.')
+
+      let signature = await connection.sendRawTransaction(
+        signedTransaction.serialize()
+      )
+
+      return signature
+    } catch (err) {
+      console.log(err)
+    }
+  }
+
   const getAllCampaigns = async () => {
     let accounts = await connection.getProgramAccounts(programId)
     let campaigns = [] as any
@@ -95,6 +135,9 @@ const Home: NextPage = () => {
           CampaignDetails,
           x.account.data
         )
+
+        //@ts-ignore
+        console.log(campaignData.name.amount_donated.toString())
 
         campaigns.push({
           pubId: x.pubkey,
@@ -143,13 +186,38 @@ const Home: NextPage = () => {
 
     const instructionToOurProgram = new TransactionInstruction({
       keys: [
-        { pubkey: newAccount, isSigner: false, isWritable: true },
-        { pubkey: publicKey!, isSigner: true, isWritable: true },
         { pubkey: campaignPubKey, isSigner: false, isWritable: true },
+        { pubkey: newAccount, isSigner: false, isWritable: false },
+        { pubkey: publicKey!, isSigner: true, isWritable: false },
       ],
       programId: programId,
-      data: new Uint8Array([2]) as Buffer,
+      data: Buffer.from(new Uint8Array([2])),
     })
+
+    const transaction = await setPayerAndBlockhashTransaction([
+      createProgramAccount,
+      instructionToOurProgram,
+    ])
+
+    const signature = await signAndSendTransaction(transaction)
+    const result = await connection.confirmTransaction(signature!)
+
+    console.log('end sendMessage', result)
+  }
+
+  const onDonate = async (
+    e: React.MouseEvent<HTMLButtonElement, MouseEvent>,
+    pubKey: PublicKey
+  ) => {
+    e.preventDefault()
+    console.log(pubKey)
+    const totalSol = amount * LAMPORTS
+    await donateToCampaign(pubKey, totalSol)
+    let updatedCampaigns = await getAllCampaigns()
+    updatedCampaigns.map((campaign: any) => {
+      console.log(campaign.amount_donated.toString())
+    })
+    setAllCampaigns(updatedCampaigns)
   }
 
   return (
@@ -159,7 +227,7 @@ const Home: NextPage = () => {
         {allCampaigns.map((campaign: any) => (
           <div
             key={campaign.pubId.toString()}
-            className="group cursor-pointer overflow-hidden rounded-lg"
+            className="group cursor-pointer overflow-hidden rounded-lg shadow shadow-violet-500"
           >
             <img
               className="h-60 w-full object-cover transition-transform duration-200 ease-in-out group-hover:scale-105"
@@ -170,7 +238,10 @@ const Home: NextPage = () => {
                 <p className="text-lg font-bold">{campaign.name}</p>
                 <p className="text-xs">{campaign.description}</p>
                 <p className="mt-1 flex items-center text-sm">
-                  Amount raised: {campaign.amount_donated.toString()}
+                  Amount raised:
+                  {Math.round(
+                    (campaign.amount_donated.toString() / LAMPORTS) * 10
+                  ) / 10}
                   <span className="flex space-x-1">
                     <img
                       className="ml-2 object-contain"
@@ -182,20 +253,35 @@ const Home: NextPage = () => {
                   </span>
                 </p>
               </div>
-              <div className="flex flex-col items-center justify-between">
+              <div className="m-2 flex space-x-2 items-center justify-between sm:space-x-2">
                 <input
-                  className="mt-1 mb-2 block w-full rounded-md border p-2 text-sm shadow outline-none ring-violet-600 focus:ring-2 "
+                  className="w-4/6 rounded-md border p-2 text-xs shadow outline-none ring-violet-600 focus:ring-2 "
                   placeholder="Amount to donate"
+                  onChange={(e) => setAmount(parseInt(e.target.value))}
                   type="text"
                 />
-                <div className="mx-auto flex items-center justify-between space-x-8">
-                  <button className="rounded bg-violet-700 py-3 px-6 text-xs font-bold text-white shadow  outline-none hover:bg-violet-800 focus:outline-none focus:ring focus:ring-violet-600 active:bg-violet-900 sm:py-2 sm:px-4">
-                    Donate
-                  </button>
-                  <button className="rounded bg-violet-700  py-3 px-6 text-xs font-bold text-white shadow outline-none hover:bg-violet-800 focus:outline-none focus:ring focus:ring-violet-600 active:bg-violet-900 sm:py-2 sm:px-4">
-                    Withdraw
-                  </button>
-                </div>
+                <button
+                  className="rounded bg-violet-700  px-6 py-2 text-xs font-bold text-white shadow outline-none hover:bg-violet-800 focus:outline-none focus:ring focus:ring-violet-600 active:bg-violet-900 sm:px-4 sm:py-2"
+                  type="submit"
+                  onClick={(e) => onDonate(e, campaign.pubId)}
+                >
+                  Donate
+                </button>
+              </div>
+              <div className="m-2 space-x-2 flex items-center justify-between sm:space-x-4">
+                <input
+                  className="w-4/6 rounded-md border p-2 text-xs shadow outline-none ring-violet-600 focus:ring-2 "
+                  placeholder="Amount to withdraw"
+                  onChange={(e) => setAmount(parseInt(e.target.value))}
+                  type="text"
+                />
+                <button
+                  className="rounded bg-violet-700 px-4 py-2  text-xs font-bold text-white shadow outline-none hover:bg-violet-800 focus:outline-none focus:ring focus:ring-violet-600 active:bg-violet-900 sm:px-2 sm:py-2"
+                  type="submit"
+                  onClick={(e) => onDonate(e, campaign.pubId)}
+                >
+                  Withdraw
+                </button>
               </div>
             </div>
           </div>
