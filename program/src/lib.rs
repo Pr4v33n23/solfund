@@ -4,7 +4,7 @@ use solana_program::{
     account_info::{next_account_info, AccountInfo},
     entrypoint,
     entrypoint::ProgramResult,
-    log::{sol_log_compute_units, sol_log_params, sol_log_slice},
+    log::{sol_log, sol_log_compute_units, sol_log_params, sol_log_slice},
     msg,
     program_error::ProgramError,
     pubkey::Pubkey,
@@ -122,18 +122,8 @@ fn create_campaign(
     //Serializing the campaign data
     campaign_data.serialize(&mut &mut program_owner_account.try_borrow_mut_data()?[..])?;
 
-    // Log a slice
-    sol_log_slice(instruction_data);
-
     // Log a formatted message, use with caution can be expensive
-    msg!("formatted {}: {:?}", "message", instruction_data);
     msg!("formatted {}: {:?}", "message", campaign_data);
-
-    // Log a public key
-    program_id.log();
-
-    // Log all the program's input parameters
-    sol_log_params(accounts, instruction_data);
 
     Ok(())
 }

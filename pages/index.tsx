@@ -80,24 +80,21 @@ const Home: NextPage = () => {
   const { connection } = useConnection()
   const { publicKey, signTransaction, connected } = useWallet()
   const LAMPORTS = 1000000000 // 1 lamport = 0.000000001 sol.
+  const DECIMAL_ROUND_OFF = 2
 
   const [allCampaigns, setAllCampaigns] = useState([] as any)
   const [amount, setAmount] = useState(0)
+  const [withdrawError, setWithdrawError] = useState(false)
 
   useEffect(() => {
     const campaigns = async () => {
       const onChainCampaigns = await getAllCampaigns()
-      console.log(onChainCampaigns)
       setAllCampaigns(onChainCampaigns)
     }
-
     campaigns()
   }, [])
 
-  //TODO env variable not working
-  const programId = new PublicKey(
-    'HpUfRuwq697hGMvno28BZaAGBD6LVqS9Y3cP2dCsVZmz'
-  )
+  const programId = new PublicKey(process.env.NEXT_PUBLIC_PROGRAM_ID!)
 
   const setPayerAndBlockhashTransaction = async (
     instructions: Array<TransactionInstruction>
@@ -138,6 +135,7 @@ const Home: NextPage = () => {
   const getAllCampaigns = async () => {
     let accounts = await connection.getProgramAccounts(programId)
     let campaigns = [] as any
+
     accounts.forEach((x) => {
       //! deserializer issue, raised a issue request.
       try {
@@ -147,10 +145,6 @@ const Home: NextPage = () => {
           CampaignDetails,
           x.account.data
         )
-
-        //@ts-ignore
-        console.log(campaignData.name.amount_donated.toString())
-
         campaigns.push({
           pubId: x.pubkey,
 
@@ -164,7 +158,7 @@ const Home: NextPage = () => {
           image_link: campaignData.name.image_link,
           //@ts-ignore
 
-          amount_donated: campaignData.name.amount_donated,
+          amount_donated: x.account.lamports,
           //@ts-ignore
 
           admin: campaignData.name.admin,
@@ -220,6 +214,7 @@ const Home: NextPage = () => {
   const withdraw = async (campaignPubKey: any, amount: number) => {
     let withdrawRequest = new WithDrawRequest(amount)
     let data = serialize(WithDrawRequest.schema, withdrawRequest)
+
     let data_to_send = new Uint8Array([1, ...data])
 
     const instructionToOurProgram = new TransactionInstruction({
@@ -247,7 +242,6 @@ const Home: NextPage = () => {
     pubKey: PublicKey
   ) => {
     e.preventDefault()
-    console.log(pubKey)
     const totalSol = amount * LAMPORTS
 
     try {
@@ -270,6 +264,7 @@ const Home: NextPage = () => {
       let updatedCampaigns = await getAllCampaigns()
       setAllCampaigns(updatedCampaigns)
     } catch (err) {
+      setWithdrawError(true)
       console.log(err)
     }
   }
@@ -277,6 +272,12 @@ const Home: NextPage = () => {
   return (
     <div>
       <Header />
+
+      {withdrawError && (
+        <p className="mt-1 flex justify-center text-sm font-bold text-red-500">
+          Only campaign owner can withdraw.
+        </p>
+      )}
       <div className=" grid grid-cols-1 gap-3 p-2 sm:grid-cols-2 md:gap-6 md:p-6 lg:grid-cols-3">
         {allCampaigns.map((campaign: any) => (
           <div
@@ -293,9 +294,11 @@ const Home: NextPage = () => {
                 <p className="text-xs">{campaign.description}</p>
                 <p className="mt-1 flex items-center text-sm">
                   Amount raised:
-                  {Math.round(
-                    (campaign.amount_donated.toString() / LAMPORTS) * 10
-                  ) / 10}
+                  {parseFloat(
+                    (campaign.amount_donated.toString() / LAMPORTS).toFixed(
+                      DECIMAL_ROUND_OFF
+                    )
+                  )}
                   <span className="flex space-x-1">
                     <img
                       className="ml-2 object-contain"
@@ -324,8 +327,8 @@ const Home: NextPage = () => {
               </div>
               <div className="m-2 flex items-center justify-between space-x-2 sm:space-x-4">
                 <input
-                  className="w-4/6 rounded-md border p-2 text-xs shadow outline-none ring-violet-600 focus:ring-2 "
                   placeholder="Amount to withdraw"
+                  className="w-4/6 rounded-md border p-2 text-xs shadow outline-none ring-violet-600 focus:ring-2 "
                   onChange={(e) => setAmount(parseInt(e.target.value))}
                   type="text"
                 />

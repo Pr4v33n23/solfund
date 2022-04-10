@@ -71,10 +71,7 @@ const Index: React.FC = () => {
     connectWallet()
   })
 
-  //TODO env variable not working
-  const programId = new PublicKey(
-    'HpUfRuwq697hGMvno28BZaAGBD6LVqS9Y3cP2dCsVZmz'
-  )
+  const programId = new PublicKey(process.env.NEXT_PUBLIC_PROGRAM_ID!)
 
   const {
     register,
@@ -131,8 +128,6 @@ const Index: React.FC = () => {
       SEED_PRHASE,
       programId
     )
-    console.log(title, description, image_link)
-
     //setup campaign details
     let campaign = new CampaignDetails(
       title,
@@ -141,11 +136,7 @@ const Index: React.FC = () => {
       publicKey?.toBuffer()!,
       0
     )
-    console.log(campaign)
-
     let data = serialize(CampaignDetails.schema, campaign)
-
-    console.log(data)
 
     let data_to_send = new Uint8Array([0.0, ...data])
 
@@ -213,7 +204,7 @@ const Index: React.FC = () => {
           <span className="text-white">Title</span>
           <input
             {...register('title', { required: false })}
-            className="form-input mt-1 block w-full rounded border py-1 px-2 sm:py-2 sm:px-3 shadow outline-none ring-purple-500 focus:ring-2"
+            className="form-input mt-1 block w-full rounded border py-1 px-2 shadow outline-none ring-purple-500 focus:ring-2 sm:py-2 sm:px-3"
             placeholder="Dogs"
             type="text"
           />
@@ -223,7 +214,7 @@ const Index: React.FC = () => {
           <span className="text-white">Description</span>
           <input
             {...register('description', { required: false })}
-            className="form-input mt-1 block w-full rounded border py-1 px-2 sm:py-2 sm:px-3 shadow outline-none ring-purple-500 focus:ring-2"
+            className="form-input mt-1 block w-full rounded border py-1 px-2 shadow outline-none ring-purple-500 focus:ring-2 sm:py-2 sm:px-3"
             placeholder="Save dogs"
             type="text"
           />
@@ -233,7 +224,7 @@ const Index: React.FC = () => {
           <span className="text-white">Image Link</span>
           <input
             {...register('image_link', { required: false })}
-            className="form-input mt-1 block w-full rounded border py-1 px-2 sm:py-2 sm:px-3 shadow outline-none ring-purple-500 focus:ring-2"
+            className="form-input mt-1 block w-full rounded border py-1 px-2 shadow outline-none ring-purple-500 focus:ring-2 sm:py-2 sm:px-3"
             placeholder="https://i.natgeofe.com/n/4f5aaece-3300-41a4-b2a8-ed2708a0a27c/domestic-dog_thumb_2x1.jpg"
             type="text"
           />
@@ -241,8 +232,8 @@ const Index: React.FC = () => {
         {walletConnected ? (
           <input
             type="submit"
-            className="focus:shadow-outline rounder cursor-pointer bg-purple-500  py-1 px-2 sm:py-2 sm:px-4 font-bold 
-          text-white shadow hover:bg-purple-400 focus:outline-none "
+            className="focus:shadow-outline rounder cursor-pointer bg-purple-500  py-1 px-2 font-bold text-white shadow 
+          hover:bg-purple-400 focus:outline-none sm:py-2 sm:px-4 "
           />
         ) : (
           <input
