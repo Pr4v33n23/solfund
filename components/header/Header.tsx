@@ -21,7 +21,7 @@ export const Header = () => {
         </div>
       </div>
 
-      <div className="flex flex-shrink-0 items-center justify-between space-x-5 md:inline-flex">
+      <div className="flex items-center justify-between space-x-5">
         <Link href="/campaign">
           <button className="border border-sky-400 px-4 py-2  font-semibold text-white hover:text-teal-200 md:p-2 ">
             <span className="text-sm md:text-base">New Campaign</span>
