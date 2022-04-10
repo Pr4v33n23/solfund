@@ -1,5 +1,6 @@
 import { WalletNotConnectedError } from '@solana/wallet-adapter-base'
 import { useConnection, useWallet } from '@solana/wallet-adapter-react'
+import { WalletMultiButton } from '@solana/wallet-adapter-react-ui'
 import {
   PublicKey,
   SystemProgram,
@@ -272,7 +273,6 @@ const Home: NextPage = () => {
   return (
     <div>
       <Header />
-
       {withdrawError && (
         <p className="mt-1 flex justify-center text-sm font-bold text-red-500">
           Only campaign owner can withdraw.

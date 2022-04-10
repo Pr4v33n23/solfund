@@ -1,6 +1,7 @@
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui'
 import Link from 'next/link'
 import React from 'react'
+require('@solana/wallet-adapter-react-ui/styles.css')
 
 export const Header = () => {
   return (
